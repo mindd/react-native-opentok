@@ -1,6 +1,6 @@
 {
   "name": "@mindd/react-native-opentok",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "React Native Opentok module as used in Mindd applications",
   "main": "index.js",
   "scripts": {
