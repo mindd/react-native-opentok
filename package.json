@@ -1,0 +1,11 @@
+{
+  "name": "@mindd/react-native-opentok",
+  "version": "1.0.2",
+  "description": "React Native Opentok module as used in Mindd applications",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Harrie van der Lubbe",
+  "license": "ISC"
+}
