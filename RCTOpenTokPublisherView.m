@@ -1,4 +1,5 @@
 @import UIKit;
+#import "UIView+React.h"
 #import "RCTOpenTokPublisherView.h"
 #import "RCTOpenTokSharedInfo.h"
 
@@ -14,22 +15,29 @@
   }
 }
 
+- (void)adjustViewToScreenSize {
+    RCTOpenTokSharedInfo *sharedInfo = [RCTOpenTokSharedInfo sharedInstance];
+    if (sharedInfo.outgoingVideoPublisher) {
+        NSLog(@"RCTOpenTokPublisherView.adjustViewToScreenSize");
+//        CGFloat width = [UIScreen mainScreen].bounds.size.width;
+//        CGFloat height = [UIScreen mainScreen].bounds.size.height;
+        CGFloat width = 100.0f;
+        CGFloat height = width * 4 / 3;
+
+        [sharedInfo.outgoingVideoPublisher.view setFrame:CGRectMake(0, 0, width, height)];
+    } else {
+        NSLog(@"RCTOpenTokPublisherView.adjustViewToScreenSize no outgoingVideoPublisher");
+    }
+}
+
 - (void)initPublisherView {
   NSLog(@"RCTOpenTokSubscriberView.initPublisherView");
   if (!self.initialized) {
     RCTOpenTokSharedInfo *sharedInfo = [RCTOpenTokSharedInfo sharedInstance];
     if (sharedInfo.outgoingVideoPublisher) {
-
-      NSLog(@"outgoing bounds %f,%f",self.bounds.size.width,self.bounds.size.height);
-
-      //TODO: THIS IS HARDCODED HERE, BECAUSE CANT SEEM TO GET IT FIXED ATM.
-      //SOMEHOW THE BOUNDS ARE 0,0, should be set through the RCT binding
-      CGFloat width = 100.0f;
-      CGFloat height = width * 4 / 3;
-
-      [sharedInfo.outgoingVideoPublisher.view setFrame:CGRectMake(0, 0, width, height)];
       [self addSubview:sharedInfo.outgoingVideoPublisher.view];
       self.initialized = true;
+      [self adjustViewToScreenSize];
       NSLog(@"RCTOpenTokSubscriberView.initPublisherView initialized");
     } else {
       NSLog(@"RCTOpenTokSubscriberView.initPublisherView no subscriber");
@@ -37,6 +45,11 @@
   } else {
     NSLog(@"RCTOpenTokSubscriberView.initPublisherView already initialized");
   }
+}
+
+- (void)reactSetFrame:(CGRect)frame
+{
+    [self adjustViewToScreenSize];
 }
 
 - (void)deinitPublisherView {

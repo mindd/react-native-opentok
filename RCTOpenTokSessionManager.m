@@ -81,6 +81,7 @@ RCT_EXPORT_METHOD(connect:(NSString *)apiKey sessionId:(NSString *)sessionId tok
   }
 }
 
+
 RCT_EXPORT_METHOD(sendMessage:(NSString *)message) {
   RCTOpenTokSharedInfo *sharedInfo = [RCTOpenTokSharedInfo sharedInstance];
 
@@ -159,6 +160,42 @@ RCT_EXPORT_METHOD(stopPublishing) {
 
 }
 
+
+RCT_EXPORT_METHOD(startFollowing) {
+    RCTOpenTokSharedInfo *sharedInfo = [RCTOpenTokSharedInfo sharedInstance];
+    
+    if (sharedInfo.session && sharedInfo.incomingSharingStream) {
+        sharedInfo.incomingSharingSubscriber = [[OTSubscriber alloc] initWithStream:sharedInfo.incomingSharingStream delegate:self];
+        OTError* error = nil;
+        [sharedInfo.session subscribe:sharedInfo.incomingSharingSubscriber error:&error];
+        if (error) {
+            NSLog(@"RCTOpenTokSessionManager.startFollowing failed with error: (%@)", error);
+        } else {
+            NSLog(@"RCTOpenTokSessionManager.startFollowing done");
+        }
+    } else {
+        if (sharedInfo.session == nil) NSLog(@"RCTOpenTokSessionManager.startstartFollowing session was nil");
+        if (sharedInfo.incomingSharingStream == nil) NSLog(@"RCTOpenTokSessionManager.startstartFollowing videostream was nil");
+    }
+}
+
+RCT_EXPORT_METHOD(stopFollowing) {
+    RCTOpenTokSharedInfo *sharedInfo = [RCTOpenTokSharedInfo sharedInstance];
+    
+    if (sharedInfo.session && sharedInfo.incomingSharingSubscriber) {
+        OTError* error = nil;
+        [sharedInfo.session unsubscribe:sharedInfo.incomingSharingSubscriber error:&error];
+        if (error) {
+            NSLog(@"RCTOpenTokSessionManager.stopFollowing failed with error: (%@)", error);
+        } else {
+            NSLog(@"RCTOpenTokSessionManager.stopFollowing done");
+        }
+    } else {
+        if (sharedInfo.session == nil) NSLog(@"RCTOpenTokSessionManager.stopFollowing session was nil");
+        if (sharedInfo.incomingSharingStream == nil) NSLog(@"RCTOpenTokSessionManager.stopFollowing subscriber was nil");
+    }    
+}
+
 RCT_EXPORT_METHOD(startReceiving) {
   RCTOpenTokSharedInfo *sharedInfo = [RCTOpenTokSharedInfo sharedInstance];
 
@@ -194,6 +231,16 @@ RCT_EXPORT_METHOD(stopReceiving) {
     if (sharedInfo.incomingVideoSubscriber == nil) NSLog(@"RCTOpenTokSessionManager.stopReceiving subscriber was nil");
   }
 
+}
+
+RCT_EXPORT_METHOD(forceScreenUpdate:(BOOL)allowOrientationAfterScreenUpdate) {
+    //nothing really needs to be done in ios
+    //this method in android also determines the orientation....
+}
+
++(UIInterfaceOrientationMask)orientation {
+    RCTOpenTokSharedInfo *sharedInfo = [RCTOpenTokSharedInfo sharedInstance];
+    return sharedInfo.session == nil ?  UIInterfaceOrientationMaskPortrait : UIInterfaceOrientationMaskAll;
 }
 
 # pragma mark publisher manipulation
@@ -262,15 +309,25 @@ RCT_EXPORT_METHOD(stopReceiving) {
 - (void)session:(OTSession*)session streamCreated:(OTStream *)stream {
   NSLog(@"RCTOpenTokSessionManager.session.streamCreated");
   RCTOpenTokSharedInfo *sharedInfo = [RCTOpenTokSharedInfo sharedInstance];
-  sharedInfo.latestIncomingVideoStream = stream;
-  [self.bridge.eventDispatcher sendAppEventWithName:@"onReceivingFound" body:@{}];
+  if (stream.videoType == OTStreamVideoTypeScreen) {
+      sharedInfo.incomingSharingStream = stream;
+      [self.bridge.eventDispatcher sendAppEventWithName:@"onSharingFound" body:@{}];
+  } else {
+      sharedInfo.latestIncomingVideoStream = stream;
+      [self.bridge.eventDispatcher sendAppEventWithName:@"onReceivingFound" body:@{}];
+  }
 }
 
 - (void)session:(OTSession*)session streamDestroyed:(OTStream *)stream {
   NSLog(@"RCTOpenTokSessionManager.session.streamDestroyed");
   RCTOpenTokSharedInfo *sharedInfo = [RCTOpenTokSharedInfo sharedInstance];
-  sharedInfo.latestIncomingVideoStream = stream;
-  [self.bridge.eventDispatcher sendAppEventWithName:@"onReceivingLost" body:@{}];
+  if (stream.videoType == OTStreamVideoTypeScreen) {
+      sharedInfo.incomingSharingStream = stream;
+      [self.bridge.eventDispatcher sendAppEventWithName:@"onSharingLost" body:@{}];
+  } else {
+      sharedInfo.latestIncomingVideoStream = stream;
+      [self.bridge.eventDispatcher sendAppEventWithName:@"onReceivingLost" body:@{}];
+  }
 }
 
 - (void)session:(OTSession*)session connectionCreated:(OTConnection *)connection {

@@ -1,9 +1,5 @@
 package io.callstack.react.opentok;
 
-/**
- * Created by harrie on 23-08-17.
- */
-
 import com.opentok.android.Session;
 import com.opentok.android.Stream;
 import com.opentok.android.Subscriber;
@@ -17,6 +13,10 @@ public class OpenTokSharedInfo {
     public Stream latestIncomingVideoStream;
     public Subscriber incomingVideoSubscriber;
     public Publisher outgoingVideoPublisher;
+
+    public Subscriber incomingSharingSubscriber;
+    public Stream incomingSharingStream;
+
     public boolean audioIsOn;
     public boolean videoIsOn;
     public String cameraPosition; //FRONT / BACK

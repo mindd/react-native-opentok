@@ -6,4 +6,6 @@
 
 @property RCTOpenTokSharedInfo *sharedInfo;
 
++ (UIInterfaceOrientationMask)orientation;
+
 @end

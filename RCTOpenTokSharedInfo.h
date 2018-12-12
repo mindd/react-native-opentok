@@ -8,6 +8,10 @@
 @property OTSubscriber *incomingVideoSubscriber;
 @property OTPublisher *outgoingVideoPublisher;
 @property OTStream *outgoingVideoStream;
+
+@property OTSubscriber *incomingSharingSubscriber;
+@property OTStream *incomingSharingStream;
+
 @property AVCaptureDevicePosition cameraPosition;
 @property BOOL audioIsOn;
 @property BOOL videoIsOn;
