@@ -27,7 +27,8 @@ public class MainPackage implements ReactPackage {
     public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
         return Arrays.<ViewManager>asList(
            new PublisherViewManager(),
-           new SubscriberViewManager()
+           new SubscriberViewManager(),
+           new SharingViewManager()
         );
     }
 }

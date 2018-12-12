@@ -8,12 +8,7 @@ import android.widget.FrameLayout;
 
 import com.facebook.react.uimanager.ThemedReactContext;
 
-/**
- * PublisherView
- *
- * React Component extending SessionView that publishes stream of video and audio to the stream
- */
-public class PublisherView  extends FrameLayout {
+public class PublisherView extends FrameLayout {
 
     private boolean initialized;
 

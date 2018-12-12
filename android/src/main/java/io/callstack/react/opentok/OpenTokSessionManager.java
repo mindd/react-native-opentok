@@ -100,8 +100,9 @@ public class OpenTokSessionManager extends ReactContextBaseJavaModule implements
         sharedInfo.session.setSignalListener(this);
         sharedInfo.session.setConnectionListener(this);
         sharedInfo.session.connect(token);
-
+        this.forceScreenUpdate(true);
     }
+
 
     @ReactMethod
     public void sendMessage(String message) {
@@ -122,7 +123,7 @@ public class OpenTokSessionManager extends ReactContextBaseJavaModule implements
         if (sharedInfo.session != null) {
             sharedInfo.session.disconnect();
             sharedInfo.session = null;
-            forceScreenUpdate();
+            this.forceScreenUpdate(false);
             Log.d("OPENTOK","OpenTokSessionManager.clearSession cleared");
         } else {
             Log.d("OPENTOK","OpenTokSessionManager.clearSession was already null");
@@ -152,6 +153,33 @@ public class OpenTokSessionManager extends ReactContextBaseJavaModule implements
         } else {
             if (sharedInfo.session == null) Log.d("OPENTOK","OpenTokSessionManager.stopPublishing session was null");
             if (sharedInfo.outgoingVideoPublisher == null) Log.d("OPENTOK","OpenTokSessionManager.stopPublishing publisher was null");
+        }
+    }
+
+    @ReactMethod
+    public void startFollowing() {
+        OpenTokSharedInfo sharedInfo = OpenTokSharedInfo.getInstance();
+        if (sharedInfo.session != null && sharedInfo.incomingSharingStream != null) {
+            sharedInfo.incomingSharingSubscriber = new Subscriber.Builder(getReactApplicationContext(), sharedInfo.incomingSharingStream).build();
+            sharedInfo.incomingSharingSubscriber.setSubscriberListener(this);
+
+            sharedInfo.session.subscribe(sharedInfo.incomingSharingSubscriber);
+            Log.d("OPENTOK","OpenTokSessionManager.startFollowing done");
+        } else {
+            if (sharedInfo.session == null) Log.d("OPENTOK","OpenTokSessionManager.startFollowing session was null");
+            if (sharedInfo.incomingSharingStream == null) Log.d("OPENTOK","OpenTokSessionManager.startFollowing videostream was null");
+        }
+    }
+
+    @ReactMethod
+    public void stopFollowing() {
+        OpenTokSharedInfo sharedInfo = OpenTokSharedInfo.getInstance();
+        if (sharedInfo.session != null && sharedInfo.incomingSharingSubscriber != null) {
+            sharedInfo.session.unsubscribe(sharedInfo.incomingSharingSubscriber);
+            Log.d("OPENTOK","OpenTokSessionManager.stopFollowing done");
+        } else {
+            if (sharedInfo.session == null) Log.d("OPENTOK","OpenTokSessionManager.stopFollowing session was null");
+            if (sharedInfo.incomingSharingSubscriber == null) Log.d("OPENTOK","OpenTokSessionManager.stopFollowing subcriber was null");
         }
     }
 
@@ -187,11 +215,15 @@ public class OpenTokSessionManager extends ReactContextBaseJavaModule implements
     It seems the video has an artefact / black space after removed from screen
 
  */
+
     @ReactMethod
-    public void forceScreenUpdate() {
+    public void forceScreenUpdate(boolean allowOrientationAfterScreenUpdate) {
         final Activity currentActivity = this.getCurrentActivity();
         new android.os.Handler().postDelayed( new Runnable() { public void run() { currentActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE); } }, 100);
         new android.os.Handler().postDelayed( new Runnable() { public void run() { currentActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); } }, 300);
+        if (allowOrientationAfterScreenUpdate) {
+            new android.os.Handler().postDelayed( new Runnable() { public void run() { currentActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR); } }, 500);
+        }
     }
 
     protected void sendEvent(Events event) {
@@ -263,16 +295,28 @@ public class OpenTokSessionManager extends ReactContextBaseJavaModule implements
     public void onStreamReceived(Session session, Stream stream) {
         Log.d("OPENTOK","OpenTokSessionManager.stream.streamReceived");
         OpenTokSharedInfo sharedInfo = OpenTokSharedInfo.getInstance();
-        sharedInfo.latestIncomingVideoStream = stream;
-        sendEvent(Events.EVENT_RECEIVING_FOUND);
+        if (stream.getStreamVideoType() == Stream.StreamVideoType.StreamVideoTypeScreen) {
+            sharedInfo.incomingSharingStream = stream;
+            sendEvent(Events.EVENT_SHARING_FOUND);
+        } else {
+            sharedInfo.latestIncomingVideoStream = stream;
+            sendEvent(Events.EVENT_RECEIVING_FOUND);
+        }
     }
 
     @Override
     public void onStreamDropped(Session session, Stream stream) {
         Log.d("OPENTOK","OpenTokSessionManager.stream.streamDropped");
         OpenTokSharedInfo sharedInfo = OpenTokSharedInfo.getInstance();
-        sharedInfo.latestIncomingVideoStream = stream;
-        sendEvent(Events.EVENT_RECEIVING_LOST);
+        if (stream.getStreamVideoType() == Stream.StreamVideoType.StreamVideoTypeScreen) {
+            Log.d("OPENTOK","OpenTokSessionManager.stream.streamDropped SCREEN");
+            sharedInfo.incomingSharingStream = stream;
+            sendEvent(Events.EVENT_SHARING_LOST);
+        } else {
+            Log.d("OPENTOK","OpenTokSessionManager.stream.streamDropped VIDEO");
+            sharedInfo.latestIncomingVideoStream = stream;
+            sendEvent(Events.EVENT_RECEIVING_LOST);
+        }
     }
 
     @Override
@@ -348,19 +392,31 @@ public class OpenTokSessionManager extends ReactContextBaseJavaModule implements
     public void onConnected(SubscriberKit subscriberKit) {
         Log.d("OPENTOK","OpenTokSessionManager.subscriber.connected:");
         //should we pass error?
-        sendEvent(Events.EVENT_RECEIVING_CONNECTED);
+        if (subscriberKit.getStream().getStreamVideoType() == Stream.StreamVideoType.StreamVideoTypeScreen) {
+            sendEvent(Events.EVENT_SHARING_CONNECTED);
+        } else {
+            sendEvent(Events.EVENT_RECEIVING_CONNECTED);
+        }
     }
 
     public void onDisconnected(SubscriberKit subscriberKit) {
         Log.d("OPENTOK","OpenTokSessionManager.subscriber.connected:");
         //should we pass error?
-        sendEvent(Events.EVENT_RECEIVING_DISCONNECTED);
+        if (subscriberKit.getStream().getStreamVideoType() == Stream.StreamVideoType.StreamVideoTypeScreen) {
+            sendEvent(Events.EVENT_SHARING_DISCONNECTED);
+        } else {
+            sendEvent(Events.EVENT_RECEIVING_DISCONNECTED);
+        }
     }
 
     public void onReconnected(SubscriberKit subscriberKit) {
         Log.d("OPENTOK","OpenTokSessionManager.subscriber.connected:");
         //should we pass error?
-        sendEvent(Events.EVENT_RECEIVING_DISCONNECTED);
+        if (subscriberKit.getStream().getStreamVideoType() == Stream.StreamVideoType.StreamVideoTypeScreen) {
+            sendEvent(Events.EVENT_SHARING_RECONNECTED);
+        } else {
+            sendEvent(Events.EVENT_RECEIVING_RECONNECTED);
+        }
     }
 
 

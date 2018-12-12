@@ -8,6 +8,8 @@ export const startPublishing  = SessionManager.startPublishing;
 export const stopPublishing   = SessionManager.stopPublishing;
 export const startReceiving   = SessionManager.startReceiving;
 export const stopReceiving    = SessionManager.stopReceiving;
+export const startFollowing   = SessionManager.startFollowing;
+export const stopFollowing    = SessionManager.stopFollowing;
 export const audioOn          = SessionManager.audioOn;
 export const audioOff         = SessionManager.audioOff;
 export const videoOn          = SessionManager.videoOn;
@@ -23,6 +25,8 @@ export const onSessionDisconnected    = (callback) => { listeners.push( NativeAp
 export const onMessageReceived        = (callback) => { listeners.push( NativeAppEventEmitter.addListener('onMessageReceived',        (e) => callback(e)) ) };
 export const onReceivingFound         = (callback) => { listeners.push( NativeAppEventEmitter.addListener('onReceivingFound',         (e) => callback(e)) ) };
 export const onReceivingLost          = (callback) => { listeners.push( NativeAppEventEmitter.addListener('onReceivingLost',          (e) => callback(e)) ) };
+export const onSharingFound           = (callback) => { listeners.push( NativeAppEventEmitter.addListener('onSharingFound',           (e) => callback(e)) ) };
+export const onSharingLost            = (callback) => { listeners.push( NativeAppEventEmitter.addListener('onSharingLost',            (e) => callback(e)) ) };
 export const onReceivingConnected     = (callback) => { listeners.push( NativeAppEventEmitter.addListener('onReceivingConnected',     (e) => callback(e)) ) };
 export const onReceivingReconnected   = (callback) => { listeners.push( NativeAppEventEmitter.addListener('onReceivingReconnected',   (e) => callback(e)) ) };
 export const onReceivingDisconnected  = (callback) => { listeners.push( NativeAppEventEmitter.addListener('onReceivingDisconnected',  (e) => callback(e)) ) };
