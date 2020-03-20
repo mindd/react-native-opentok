@@ -15,7 +15,7 @@ Pod::Spec.new do |s|
   s.license      = "MIT"
   s.platform     = :ios, "8.0"
 
-  s.source       = { :git => "https://github.com/mindd/react-native-opentok.git", "master"}
+  s.source       = { :git => "https://github.com/mindd/react-native-opentok.git", :branch => "master"}
 
   s.source_files  = "*.{h,m}"
   s.dependency 'React'
